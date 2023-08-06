@@ -27,26 +27,13 @@ namespace ServerManager
                     {
                         Console.Title = $"SCP-Server Manager - Checking Configs...";
 
-                        configs = GetConfigs();
-                        foreach (var config in configs)
-                        {
-                            if (!Servers[1].Contains(config))
-                            {
-                                var result = CreateServer(config);
-                                Servers.Add(result);
-                            }
-                        }
-                        for (int i = 0; i < Servers.Count() - 1; i++)
-                        {
-                            if (!configs.Contains(Servers[i][1]))
-                            {
-                                var process = (Process)Servers[i][1];
-                                if (ForceShutdown)
-                                    process.Kill();
-                                Servers.Remove(Servers[i]);
-                            }
-                        }
+                        if (configs.Count() < GetConfigs().Count())
+                            configs = AddServer(GetConfigs(), configs);
+                        if (configs.Count() > GetConfigs().Count())
+                            configs = RemoveServer(GetConfigs(), configs);
                     }
+
+                    Console.Title = $"SCP-Server Manager - {Servers.Count} of {configs.Count()} servers active";
 
                     foreach (var server in Servers)
                     {
@@ -103,6 +90,57 @@ namespace ServerManager
             Console.ResetColor();
             string args = $"{config.Map} -ConfigFileName={config.ConfigFile} -log -port={config.Port} -queryport={config.QueryPort} -force_steamclient_link";
             return new object[] { Process.Start(Path, args), config };
+        }
+
+        private Config[] AddServer(Config[] newConfigs, Config[] prevConfigs)
+        {
+            List<Config> _configs = prevConfigs.ToList();
+
+            foreach (var config in newConfigs)
+            {
+                if (prevConfigs.Count() != 0)
+                {
+                    if (!prevConfigs.Contains(config))
+                    {
+                        var result = CreateServer(config);
+                        Servers.Add(result);
+                        _configs.Add(config);
+                    }
+                }
+                else
+                {
+                    var result = CreateServer(config);
+                    Servers.Add(result);
+                    _configs.Add(config);
+                }
+            }
+
+            return _configs.ToArray();
+        }
+
+        private Config[] RemoveServer(Config[] newConfigs, Config[] prevConfigs)
+        {
+            List<Config> _configs = prevConfigs.ToList();
+
+            for (int i = 0; i < Servers.Count(); i++)
+            {
+                if (!newConfigs.Contains(Servers[i][1]))
+                {
+                    Config config = (Config)Servers[i][1];
+                    Servers.Remove(Servers[i]);
+                    _configs.Remove(config);
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Console.WriteLine($"[{DateTime.Now}] Server {config.ServerName} was removed.");
+                    if (ForceShutdown)
+                    {
+                        var process = (Process)Servers[i][0];
+                        process.Kill();
+                        Console.WriteLine($"[{DateTime.Now}] Server {config.ServerName} got terminated.");
+                    }
+                    Console.ResetColor();
+                }
+            }
+            return _configs.ToArray();
         }
 
         private Config[] GetConfigs()
