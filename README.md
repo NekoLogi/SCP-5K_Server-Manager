@@ -15,7 +15,7 @@ There are currently three parameters you can use.
 1. -path={Path of the PandemicServer.exe [.exe file included in the path]} - With this you can put your manager everywhere you want.
    [Default: Same path/folder as ServerManager.exe]
    
-2. -activeconfigs={Boolean: true or false} - If "true" by adding a config, the manager will create a server corresponding to the Config-File, also by removing a config, the manager won't restart the server after Serf-Termination.
+2. -activeconfigs={Boolean: true or false} - If "true" by adding a config, the manager will create a server corresponding to the Config-File, also by removing a config, the manager won't restart the server after Self-Termination.
    (Manager can Force-Terminate by using -forceshutdown=)
    [Default: False.]
 
